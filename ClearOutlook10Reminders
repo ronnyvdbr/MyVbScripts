@@ -1,0 +1,11 @@
+ON ERROR RESUME NEXT
+CONST HKEY_CURRENT_USER 	= &H80000001
+CONST HKEY_LOCAL_MACHINE 	= &H80000002
+
+strServer = "."
+SET objReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & strServer & "\root\default:StdRegProv")
+
+CALL objReg.GetBinaryValue(HKEY_LOCAL_MACHINE,"SOFTWARE\MICROSOFT\OFFICE\10.0\OUTLOOK\SETUP","First-Run",arrValue)
+CALL objReg.SetBinaryValue(HKEY_CURRENT_USER,"SOFTWARE\MICROSOFT\OFFICE\10.0\OUTLOOK\SETUP","First-Run",arrValue)
+
+SET objReg = NOTHING
