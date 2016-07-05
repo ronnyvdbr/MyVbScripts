@@ -1,0 +1,60 @@
+OPTION EXPLICIT
+DIM strServer, strDriveName, strProgramPath, strWorkingDirectory
+DIM intProcessID
+strServer = "."
+strDriveName =""
+strProgramPath =""
+strWorkingDirectory = ""
+
+SELECT CASE wscript.arguments.count
+CASE 2
+	strProgramPath 		= wscript.arguments(0)
+	strWorkingDirectory 	= wscript.arguments(1)
+	
+	CALL RunApplication(strProgramPath,strWorkingDirectory,intProcessID)
+CASE 3
+	
+	strProgramPath 		= wscript.arguments(0)
+	strWorkingDirectory 	= wscript.arguments(1)
+	strDriveName 		= wscript.arguments(2)
+
+	CALL WaitForDriveMapping(".",strDriveName)
+	CALL RunApplication(strProgramPath,strWorkingDirectory,intProcessID)
+CASE ELSE
+END SELECT
+
+
+
+
+FUNCTION RunApplication(strApplicationPath,strWorkingDirectory,intProcessID)
+	DIM objProcess
+
+	SET objProcess = GetObject("winmgmts:Win32_Process")
+	IF objProcess.Create(strApplicationPath,strWorkingDirectory,,intProcessID) <> 0 THEN
+		RunApplication = vbFALSE
+	ELSE
+		RunApplication = vbTRUE
+	END IF
+
+	SET objProcess = NOTHING
+END FUNCTION
+
+SUB WaitForDriveMapping(strServer,strDriveName)
+	DIM objWMI, objWMIDisks
+	DIM strQuery
+	DIM blnDriveMapped
+
+	SET objWMI 	= GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\" & strServer & "\root\cimv2")
+	strQuery 	= "Select * from Win32_LogicalDisk WHERE DriveType='4' AND Name='" & strDriveName & "'"
+
+	blnDriveMapped = vbFALSE
+	WHILE NOT blnDriveMapped
+		SET objWMIDisks = objWMI.ExecQuery(strQuery)
+		blnDriveMapped = CBOOL(objWMIDisks.Count = 1)
+	WEND
+
+
+	SET objWMIDisks = NOTHING
+	SET objWMI	= NOTHING
+END SUB
+
