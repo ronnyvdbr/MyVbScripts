@@ -1,0 +1,42 @@
+OPTION EXPLICIT
+ON ERROR RESUME NEXT
+
+
+'DECLARATION CONSTANTS
+CONST NO_VALID_SESSION 			= -1
+CONST strApplication	 		= "M:\Program Files\Microsoft Business Solutions-Navision\Client\FINSQL.exe"
+CONST WEIGHTSCALE_WORKING_DIRECTORY	= "M:\Program Files\_TestCompany\WBComm"
+CONST MAP_COM1				= "CMD.EXE /C IF NOT EXIST COM1: net use com1: \\client\com1:"
+CONST SET_RTS_OFF_PATH			= "MODE.COM COM1 RTS=OFF"
+
+
+DIM str_S_Parameter, str_C_Parameter, str_U_Parameter, str_P_Parameter, str_L_Parameter
+DIM intProcessID
+DIM objShell, objNet
+
+SET objNet = WScript.CreateObject("WScript.Network")
+objNet.RemovePrinterConnection "COM1:", vbTRUE, vbTRUE
+objNet.AddPrinterConnection "COM1:", "\\CLIENT\COM1:",vbFalse
+
+
+'SET objShell = CreateObject("WSCRIPT.SHELL")
+'SET RTS to OFF, necessary to get the com port working under Terminal Server
+
+'objShell.Run SET_RTS_OFF_PATH,0,vbTRUE
+SET objShell = NOTHING
+
+
+CALL RunApplication(strApplication,,intProcessID)
+
+wscript.quit
+
+FUNCTION RunApplication(strApplicationPath,strWorkingDirectory,intProcessID)
+	DIM objProcess
+	SET objProcess = GetObject("winmgmts:Win32_Process")
+	IF objProcess.Create(strApplicationPath,strWorkingDirectory,,intProcessID) <> 0 THEN
+		RunApplication = vbFALSE
+	ELSE
+		RunApplication = vbTRUE
+	END IF
+	SET objProcess = NOTHING
+END FUNCTION
